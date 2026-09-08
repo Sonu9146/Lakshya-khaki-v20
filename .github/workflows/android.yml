@@ -20,7 +20,6 @@ jobs:
 
     - name: Unzip Source Code Cleanly
       run: |
-        # Simply unzip the file directly into the root workspace
         unzip -o *.zip -d .
         rm -f *.zip
 
@@ -31,12 +30,12 @@ jobs:
 
     - name: Force AndroidX and JVM 17 Target
       run: |
-        # 1. Inject AndroidX requirements safely into gradle.properties
+        # 1. Inject AndroidX support into gradle.properties
         echo "android.useAndroidX=true" >> gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties
         echo "org.gradle.java.home=${JAVA_HOME}" >> gradle.properties
 
-        # 2. Overwrite JVM Target rules to Java 17 inside the main build configuration
+        # 2. Overwrite JVM Target rules to Java 17 inside build configuration
         GRADLE_FILE="app/build.gradle.kts"
         if [ -f "$GRADLE_FILE" ]; then
           sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' "$GRADLE_FILE"
@@ -44,15 +43,10 @@ jobs:
           sed -i 's/jvmTarget = "1.8"/jvmTarget = "17"/g' "$GRADLE_FILE"
         fi
 
-    - name: Grant execute permission for gradlew
+    - name: Build with Global Gradle
       run: |
-        if [ -f gradlew ]; then
-          chmod +x gradlew
-        fi
-
-    - name: Build with Gradle
-      run: |
-        ./gradlew assembleDebug --no-daemon
+        # gradlew फाइल न होने पर सीधे ग्लोबल gradle कमांड से बिल्ड करना
+        gradle assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
